@@ -34,6 +34,9 @@ def main():
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
 					keepRunning = False
+				if event.key == K_UP:
+					print "JUMP KEY PRESSED"
+					p.jump()
 		pressed_keys = pygame.key.get_pressed()
 		if pressed_keys[K_LEFT]:
 			p.move_left()
