@@ -1,9 +1,9 @@
 secret-octo-adventure
 =====================
 
-Entry in PyWeek #4  <http://www.pyweek.org/4/>
-Team: YOUR TEAM NAME (leave the "Team: bit")
-Members: YOUR TEAM MEMBERS (leave the "Members: bit")
+Entry in PyWeek #14  <http://www.pyweek.org/14/>
+Team: UrbanCrackFox
+Members: Nakedfanatic
 
 
 DEPENDENCIES:
