@@ -35,29 +35,23 @@ def main():
 	while keepRunning:
 		clock.tick()
 
-		#messagepump
-		for event in pygame.event.get():
+		events = pygame.event.get()
+
+		for event in events:
 			if event.type == QUIT:
 				keepRunning = False
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
 					keepRunning = False
-				if event.key == K_UP:
-					print "JUMP KEY PRESSED"
-					p.jump()
-		pressed_keys = pygame.key.get_pressed()
-		if pressed_keys[K_LEFT]:
-			p.move_left()
-		if pressed_keys[K_RIGHT]:
-			p.move_right()
-		if not(pressed_keys[K_RIGHT] or pressed_keys[K_LEFT]):
-			p.stand_still()
+
+		key_downs = [e for e in events if e.type == KEYDOWN]
+		keys_pressed = pygame.key.get_pressed()
+		p.handle_input(key_downs, keys_pressed)
 
 		p.update(floor)
 
-
 		#the actual rendering code
-		rabbyt.clear() #clear the screen
+		rabbyt.clear((0.2, 0.2, 0.2)) #clear the screen
 		rabbyt.render_unsorted([t.sprite for t in floor])
 		p.sprite.render() #render the sprite
 
