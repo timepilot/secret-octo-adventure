@@ -1,62 +1,46 @@
-import json
-import rabbyt
 import data
-from rabbyt.primitives import Quad
+import pygame
 
-DATA_FILE = "level_map.json"
+class TiledRenderer():
+	"""
+	Super simple way to render a tiled map
+	"""
 
-''' load a tiled map from "TILED" json export file
-Due to being simplified for use in a PyWeek project, I am utilising
-only a single tileset and a single layer even though Tiled supports multiple '''
-class TiledMap(object):
 	def __init__(self):
-		self.map_data = json.loads(data.load(DATA_FILE).read())
-		self.tileset = self.map_data["tilesets"][0]
-		self.layer = self.map_data["layers"][0]
-		self._load_all_tiles()
+		from PyTMX.pytmx import tmxloader
+		filename = data.filepath("level_map.tmx")
+		self.tiledmap = tmxloader.load_pygame(filename, pixelalpha=True)
+		self.platforms = self.getPlatforms()
+ 
+	def getPlatforms(self):
+		platforms = []
 
-	def _load_all_tiles(self):
-		self.all_tiles = []
-		for i, tile in enumerate(self.layer["data"]):
-			if tile == 0:
-				continue
-			new_tile = Tile(self.map_data, self.tileset, self.layer, tile, i)
-			self.all_tiles.append(new_tile)
+		tw = self.tiledmap.tilewidth
+		th = self.tiledmap.tileheight
+		gp = self.tiledmap.getTileProperties
 
-class Tile(rabbyt.Sprite):
-	def __init__(self, map_data, tileset, layer, tile, index):
+		for l in xrange(0, len(self.tiledmap.layers)):
+			for y in xrange(0, self.tiledmap.height):
+				for x in xrange(0, self.tiledmap.width):
+					# Check if the tile is a platform
+					props = gp((x, y, l))
+					if props == None: continue
+					if props.get("type", None) == "platform":
+						platforms.append(pygame.Rect(x*tw, y*th, tw, 10))
+		return platforms
 
-		file_name = data.filepath(tileset["image"])
-		super(self.__class__, self).__init__(file_name)
+	def render(self, surface):
+		# not going for effeciency here
+		# for demonstration purposes only
 
-		num_columns = tileset["imagewidth"] / tileset["tilewidth"]
+		tw = self.tiledmap.tilewidth
+		th = self.tiledmap.tileheight
+		gt = self.tiledmap.getTileImage
 
-		w_norm = tileset["tilewidth"] / float(tileset["imagewidth"])
-		h_norm = tileset["tileheight"] / float(tileset["imageheight"])
-		self.tile_index = tile - 1
-		self.tex_shape.width = -w_norm
-		self.tex_shape.height = -h_norm
-		self.tex_shape.left = (self.tile_index % num_columns) * w_norm
-		self.tex_shape.top = 1 - (self.tile_index / num_columns) * h_norm
-
-		self.shape = (tileset["tilewidth"], tileset["tileheight"], 0, 0)
-
-		self.x = (index % layer["width"]) * tileset["tilewidth"]
-		self.y = (index / layer["width"]) * tileset["tileheight"]
-
-		self.is_platform = (str(tile-1) in tileset["tileproperties"]
-			and "type" in tileset["tileproperties"][str(tile-1)])
-
-		self.top_surface = Quad((self.left,
-			self.bottom,
-			self.left+32,
-			self.bottom+5))
-
-
-def main():
-	tiled_map = TiledMap()
-
-if __name__ == '__main__':
-	main()
-
+		for l in xrange(0, len(self.tiledmap.layers)):
+			for y in xrange(0, self.tiledmap.height):
+				for x in xrange(0, self.tiledmap.width):
+					# Draw the tile
+					tile = gt(x, y, l)
+					if not tile == 0: surface.blit(tile, (x*tw, y*th))
 

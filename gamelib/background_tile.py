@@ -1,7 +1,8 @@
 import data
-import rabbyt
+#import rabbyt
 import math
-from rabbyt.primitives import Quad
+#from rabbyt.primitives import Quad
+from pygame.sprite import Sprite
 import pygame
 from pygame.locals import *
 

@@ -1,7 +1,7 @@
 import sys
 import data
-import rabbyt
-from rabbyt.primitives import Quad
+#import rabbyt
+#from rabbyt.primitives import Quad
 import math
 import pygame
 from pygame.locals import *
@@ -21,19 +21,27 @@ JUMP_FORCE = -4
 class Player(object):
 	def __init__(self):
 		#load our self.sprite
-		self.sprite = rabbyt.Sprite(data.filepath("scientist.png"))
-		self.sprite.shape = (-16, -64, 16, 0)
-		self.sprite.tex_shape.width, self.sprite.tex_shape.height = 1/15.0, 1
+		self.sprite_sheet = pygame.image.load(data.filepath("scientist.png"))
+		self.f_sprite_sheet = pygame.transform.flip(self.sprite_sheet, True, False)
+
 		self.direction = FACING_LEFT
 		self.ambulatory_state = STANDING
 		self.y_vel = 0
 		self.x_vel = 0
-		self.sprite.y = 480 - 90 # initial position
+		self.x = 20
+		self.y = 300 # initial position
+		self.w = 32
+		self.h = 64
+		self.frame = 8
 		self.update_bottom_surface()
 
 	def update_bottom_surface(self):
-		x, y = self.sprite.x, self.sprite.y
-		self.bottom_surface = Quad((x-6, y-1, x+6, y))
+		mid_x = self.x + self.w / 2
+		surface_width = 8
+		self.bottom_surface = pygame.Rect(
+			mid_x - surface_width / 2, self.y + 63,
+			surface_width, 1
+			)
 
 	def stand_still(self):
 		self.ambulatory_state = STANDING
@@ -43,7 +51,6 @@ class Player(object):
 		if self.ambulatory_state != JUMPING:
 			self.ambulatory_state = RUNNING
 		if self.direction != FACING_LEFT:
-			self.sprite.scale_x = 1
 			self.direction = FACING_LEFT
 		self.x_vel = max(self.x_vel - RUN_ACCEL, -TOP_SPEED)
 
@@ -51,7 +58,6 @@ class Player(object):
 		if self.ambulatory_state != JUMPING:
 			self.ambulatory_state = RUNNING
 		if self.direction != FACING_RIGHT:
-			self.sprite.scale_x = -1
 			self.direction = FACING_RIGHT
 		self.x_vel = min(self.x_vel + RUN_ACCEL, TOP_SPEED)
 
@@ -63,19 +69,16 @@ class Player(object):
 		self.ambulatory_state = JUMPING
 		self.y_vel = JUMP_FORCE
 
-	def check_floor(self, floor_tiles):
+	def check_platforms(self, platforms):
 		if self.y_vel < 0:
 			return
 		self.update_bottom_surface()
-		collisions = rabbyt.collisions.aabb_collide_single(
-			self.bottom_surface,
-			[t.top_surface for t in floor_tiles]
-			)
-		# print collisions
-		if collisions:
+		collision = self.bottom_surface.collidelist(platforms)
+		
+		if collision != -1:
 			# landed on something
 			self.ambulatory_state = STANDING
-			self.sprite.y = collisions[0].bottom
+			self.y = platforms[collision].top - 64
 			self.y_vel = 0
 
 	def handle_input(self, key_downs, keys_pressed):
@@ -98,27 +101,36 @@ class Player(object):
 			if event.key == K_UP:
 				self.jump()
 
-	def update(self, floor):
+	def update(self, platforms):
 		if self.ambulatory_state == RUNNING:
-			i = ((int(self.sprite.x) >> 3) % 8) + 0
+			self.frame = ((int(self.x) >> 3) % 8) + 0
 			if self.direction == FACING_LEFT:
-				i = 7 - i  # otherwise sprite appears to moon-walk	
+				self.frame = 7 - self.frame  # otherwise sprite appears to moon-walk	
 		elif self.ambulatory_state == STANDING:
-			i = 8
+			self.frame = 8
 		elif self.ambulatory_state == JUMPING:
-			i = 1
+			self.frame = 1
 
-		self.sprite.y += self.y_vel
-		self.sprite.x += self.x_vel
+		self.y += self.y_vel
+		self.x += self.x_vel
 
 		self.y_vel += GRAVITY_ACCEL
 
 		if self.y_vel > 1:
 			self.ambulatory_state = JUMPING # falling really
 
-		self.check_floor(floor)
+		self.check_platforms(platforms)
 
 		# print i
-		t_x = i / 15.0
-		self.sprite.tex_shape.left = t_x
-		self.sprite.tex_shape.bottom = 1
+		#t_x = i / 15.0
+		#self.sprite.tex_shape.left = t_x
+		#self.sprite.tex_shape.bottom = 1
+
+	def render(self, surface):
+		if self.direction == FACING_RIGHT:
+			sprite_sheet_to_use = self.f_sprite_sheet
+			frame_to_use = 14 - self.frame
+		else:
+			sprite_sheet_to_use = self.sprite_sheet # flipped version
+			frame_to_use = self.frame
+		surface.blit(sprite_sheet_to_use, (self.x, self.y), (frame_to_use*self.w, 0, self.w, self.h))

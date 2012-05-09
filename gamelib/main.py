@@ -6,7 +6,7 @@ Feel free to put all your game code here, or in other modules in this "gamelib"
 package.
 '''
 
-import rabbyt
+#import rabbyt
 import sys
 import json
 import math
@@ -14,9 +14,11 @@ import pygame
 from pygame.locals import *
 import player
 import data
-import background_tile
+#import background_tile
 import tiledmap
 
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480
 
 def main():
 
@@ -25,10 +27,12 @@ def main():
 
 	#setup window
 	pygame.init()
-	pygame.display.set_mode((640, 480), pygame.OPENGL | pygame.DOUBLEBUF)
-	rabbyt.set_viewport((0, 0, 640, 480), (0, 0, 640, 480))
-	rabbyt.set_default_attribs()
+	screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.DOUBLEBUF)
+	#rabbyt.set_viewport((0, 0, 640, 480), (0, 0, 640, 480))
+	#rabbyt.set_default_attribs()
 
+	screen_buf = pygame.surface.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+	bg = pygame.surface.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 	clock = pygame.time.Clock()
 
 	print "Loading tile map..."
@@ -38,7 +42,8 @@ def main():
 
 	p = player.Player()
 
-	floor = tiledmap.TiledMap()
+	level_map = tiledmap.TiledRenderer()
+	level_map.render(bg)
 
 	#the gameloop
 	keepRunning = True
@@ -59,14 +64,12 @@ def main():
 		keys_pressed = pygame.key.get_pressed()
 		p.handle_input(key_downs, keys_pressed)
 
-		p.update([f for f in floor.all_tiles if f.is_platform])
+		p.update(level_map.platforms)
 
-		#the actual rendering code
-		rabbyt.clear((0.2, 0.2, 0.2)) #clear the screen
-		rabbyt.render_unsorted(floor.all_tiles)
-		#rabbyt.render_unsorted([t.sprite for t in floor])
-		p.sprite.render() #render the sprite
+		screen_buf.blit(bg, (0, 0))
+		p.render(screen_buf)
 
+		screen.blit(screen_buf, (0, 0))
 		pygame.display.flip() #flip the buffers
 
 def create_level():
