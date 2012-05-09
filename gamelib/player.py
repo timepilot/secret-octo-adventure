@@ -28,7 +28,7 @@ class Player(object):
 		self.ambulatory_state = STANDING
 		self.y_vel = 0
 		self.x_vel = 0
-		self.sprite.y = 480 - 32 # initial position
+		self.sprite.y = 480 - 90 # initial position
 		self.update_bottom_surface()
 
 	def update_bottom_surface(self):

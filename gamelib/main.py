@@ -7,14 +7,19 @@ package.
 '''
 
 import rabbyt
+import sys
+import json
 import math
 import pygame
 from pygame.locals import *
 import player
 import data
 import background_tile
+import tiledmap
+
 
 def main():
+
 	print "Hello from your game's main()"
 	print data.load('sample.txt').read()
 
@@ -23,11 +28,17 @@ def main():
 	pygame.display.set_mode((640, 480), pygame.OPENGL | pygame.DOUBLEBUF)
 	rabbyt.set_viewport((0, 0, 640, 480), (0, 0, 640, 480))
 	rabbyt.set_default_attribs()
+
 	clock = pygame.time.Clock()
+
+	print "Loading tile map..."
+	#tiledmap = json.loads(data.load("level_map.json").read())
+	#print json.dumps(tiledmap, indent=2)
+	#sys.exit(0)
 
 	p = player.Player()
 
-	floor = create_level()
+	floor = tiledmap.TiledMap()
 
 	#the gameloop
 	keepRunning = True
@@ -48,11 +59,12 @@ def main():
 		keys_pressed = pygame.key.get_pressed()
 		p.handle_input(key_downs, keys_pressed)
 
-		p.update(floor)
+		p.update([f for f in floor.all_tiles if f.is_platform])
 
 		#the actual rendering code
 		rabbyt.clear((0.2, 0.2, 0.2)) #clear the screen
-		rabbyt.render_unsorted([t.sprite for t in floor])
+		rabbyt.render_unsorted(floor.all_tiles)
+		#rabbyt.render_unsorted([t.sprite for t in floor])
 		p.sprite.render() #render the sprite
 
 		pygame.display.flip() #flip the buffers
